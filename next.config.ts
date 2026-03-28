@@ -1,6 +1,13 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  transpilePackages: [
+    '@fullcalendar/core',
+    '@fullcalendar/react',
+    '@fullcalendar/daygrid',
+    '@fullcalendar/timegrid',
+    '@fullcalendar/interaction',
+  ],
   // Write build artifacts to /tmp (RAM-backed tmpfs on Linux) — eliminates
   // the "slow filesystem" warning and speeds up dev hot-reload significantly.
   // Change back to '.next' if you need build artifacts to persist across reboots.
