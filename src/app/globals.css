@@ -1,0 +1,112 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'PT Sans', sans-serif;
+}
+
+@layer base {
+  :root {
+    /* Dark-mode first theme */
+    --background: 222 24% 9%;          /* Deep navy-dark */
+    --foreground: 210 40% 95%;          /* Near-white text */
+
+    --card: 222 24% 13%;                /* Slightly lighter card surface */
+    --card-foreground: 210 40% 95%;
+
+    --popover: 222 24% 13%;
+    --popover-foreground: 210 40% 95%;
+
+    --primary: 262 52% 58%;             /* #7C4DFF Deep Purple */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 222 20% 17%;           /* Subtle dark secondary */
+    --secondary-foreground: 210 35% 85%;
+
+    --muted: 222 20% 17%;
+    --muted-foreground: 215 20% 60%;    /* Readable mid-gray on dark bg */
+
+    --accent: 237 40% 30%;              /* Indigo accent */
+    --accent-foreground: 210 40% 95%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 222 18% 22%;              /* Visible but subtle border */
+    --input: 222 18% 18%;               /* Slightly different from bg for inputs */
+    --ring: 262 52% 58%;                /* Primary color for focus rings */
+
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+
+    /* Sidebar */
+    --sidebar-background: 222 24% 11%;
+    --sidebar-foreground: 210 35% 90%;
+    --sidebar-primary: 262 52% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 22% 20%;
+    --sidebar-accent-foreground: 210 40% 95%;
+    --sidebar-border: 222 18% 18%;
+    --sidebar-ring: 262 52% 58%;
+  }
+
+  .dark {
+    --background: 222 24% 9%;
+    --foreground: 210 40% 95%;
+    --card: 222 24% 13%;
+    --card-foreground: 210 40% 95%;
+    --popover: 222 24% 13%;
+    --popover-foreground: 210 40% 95%;
+    --primary: 262 52% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 20% 17%;
+    --secondary-foreground: 210 35% 85%;
+    --muted: 222 20% 17%;
+    --muted-foreground: 215 20% 60%;
+    --accent: 237 40% 35%;
+    --accent-foreground: 210 40% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 18% 22%;
+    --input: 222 18% 18%;
+    --ring: 262 52% 60%;
+
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    --sidebar-background: 222 24% 11%;
+    --sidebar-foreground: 210 35% 90%;
+    --sidebar-primary: 262 52% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 22% 20%;
+    --sidebar-accent-foreground: 210 40% 95%;
+    --sidebar-border: 222 18% 18%;
+    --sidebar-ring: 262 52% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  /* Ensure inputs have visible borders */
+  input, textarea, select {
+    @apply border border-border bg-input text-foreground placeholder:text-muted-foreground;
+  }
+  /* Cards have a subtle lift effect */
+  .card {
+    @apply shadow-sm;
+  }
+}
