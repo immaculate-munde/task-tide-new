@@ -59,16 +59,22 @@ export default function AllUnitsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingUnitId, setDeletingUnitId] = useState<number | null>(null);
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     if (!currentUser) return;
     setIsLoading(true);
-    Promise.all([courseServersApi.list(), unitsApi.list()])
-      .then(([serverRes, unitRes]) => {
-        setServers(serverRes.course_servers);
-        setAllUnits(unitRes.units);
-      })
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
+    try {
+      const serverRes = await courseServersApi.list();
+      setServers(serverRes.course_servers);
+    } catch (e) {
+      console.error('Failed to load servers:', e);
+    }
+    try {
+      const unitRes = await unitsApi.list();
+      setAllUnits(unitRes.units);
+    } catch (e) {
+      console.error('Failed to load units:', e);
+    }
+    setIsLoading(false);
   }, [currentUser]);
 
   useEffect(() => { loadData(); }, [loadData]);
