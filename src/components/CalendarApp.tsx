@@ -341,10 +341,10 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 bg-gray-50 min-h-screen relative">
+    <div className="p-3 sm:p-4 md:p-6 bg-background min-h-screen relative">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-          <CalendarDays className="h-6 w-6 text-purple-600" />
+          <CalendarDays className="h-6 w-6 text-primary" />
           Shared Calendar
         </h1>
         {isClassRep && ownedServers.length > 0 && (
@@ -362,12 +362,12 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
       {/* Legend */}
       <div className="flex flex-wrap gap-2 mb-4">
         {Object.entries(EVENT_TYPE_LABELS).map(([type, label]) => (
-          <span key={type} className="flex items-center gap-1 text-xs text-gray-600">
+          <span key={type} className="flex items-center gap-1 text-xs text-muted-foreground">
             <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: EVENT_TYPE_COLORS[type] }} />
             {label}
           </span>
         ))}
-        <span className="flex items-center gap-1 text-xs text-gray-600">
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: EVENT_TYPE_COLORS.holiday }} />
           Holiday
         </span>
@@ -375,7 +375,7 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Calendar */}
-        <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6 lg:col-span-2 order-1">
+        <div className="bg-card rounded-lg shadow-md p-3 sm:p-4 md:p-6 lg:col-span-2 order-1">
           {isLoadingEvents ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
@@ -419,7 +419,7 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
                   <CardTitle className="text-base">New Event</CardTitle>
                   <button
                     onClick={() => { setShowForm(false); resetForm(); }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -428,7 +428,7 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-3">
                   {formError && (
-                    <p className="text-sm text-red-600 bg-red-50 rounded p-2">{formError}</p>
+                    <p className="text-sm text-destructive bg-destructive/10 rounded p-2">{formError}</p>
                   )}
 
                   <div className="space-y-1">
@@ -588,7 +588,7 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
                   </CardTitle>
                   <button
                     onClick={() => setSelectedDate(null)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -596,7 +596,7 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
               </CardHeader>
               <CardContent>
                 {eventsForSelectedDate.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-2">No events on this day</p>
+                  <p className="text-muted-foreground text-sm text-center py-2">No events on this day</p>
                 ) : (
                   <div className="space-y-2 max-h-56 overflow-y-auto">
                     {eventsForSelectedDate.map(ev => {
@@ -607,24 +607,24 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
                       return (
                         <div
                           key={isHol ? ev.id : (ev as ApiEvent).id}
-                          className="rounded p-2 border border-gray-100"
+                          className="rounded p-2 border border-border"
                           style={{ borderLeftWidth: 3, borderLeftColor: color }}
                         >
                           <div className="flex items-start justify-between gap-1">
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{ev.title}</p>
                               {isHol ? (
-                                <p className="text-xs text-gray-500">{(ev as HolidayEvent).description}</p>
+                                <p className="text-xs text-muted-foreground">{(ev as HolidayEvent).description}</p>
                               ) : (
                                 <>
                                   {!(ev as ApiEvent).all_day && (ev as ApiEvent).start_time && (
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-muted-foreground">
                                       {formatTime((ev as ApiEvent).start_time)}
                                       {(ev as ApiEvent).end_time && ` — ${formatTime((ev as ApiEvent).end_time!)}`}
                                     </p>
                                   )}
                                   {(ev as ApiEvent).venue && (
-                                    <p className="text-xs text-gray-500">{(ev as ApiEvent).venue}</p>
+                                    <p className="text-xs text-muted-foreground">{(ev as ApiEvent).venue}</p>
                                   )}
                                 </>
                               )}
@@ -656,10 +656,10 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
             <CardContent>
               {isLoadingEvents ? (
                 <div className="flex justify-center py-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : backendEvents.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-4">No events yet.</p>
+                <p className="text-muted-foreground text-sm text-center py-4">No events yet.</p>
               ) : (
                 <div className="space-y-2 max-h-72 overflow-y-auto">
                   {backendEvents.slice(0, 10).map(ev => {
@@ -673,9 +673,9 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
                         <div className="flex items-start justify-between gap-1">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{ev.title}</p>
-                            <p className="text-xs text-gray-500">{formatDate(ev.start_time.split('T')[0])}</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(ev.start_time.split('T')[0])}</p>
                             {ev.course_server && (
-                              <p className="text-xs text-gray-400 truncate">{ev.course_server.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{ev.course_server.name}</p>
                             )}
                           </div>
                           <Badge
@@ -699,7 +699,7 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
       {selectedEvent && popoverPos && (
         <div
           ref={popoverRef}
-          className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-72"
+          className="fixed z-50 bg-card text-card-foreground rounded-lg shadow-xl border border-border p-4 w-72"
           style={{ top: popoverPos.top, left: popoverPos.left }}
         >
           <div className="flex items-start justify-between gap-2 mb-2">
@@ -718,7 +718,7 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
               )}
               <button
                 onClick={() => { setSelectedEvent(null); setPopoverPos(null); }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -730,8 +730,8 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
               <Badge style={{ backgroundColor: EVENT_TYPE_COLORS.holiday, color: '#fff', border: 'none' }} className="text-xs mb-2">
                 Holiday
               </Badge>
-              <p className="text-sm text-gray-600">{(selectedEvent as HolidayEvent).description}</p>
-              <p className="text-xs text-gray-400 mt-1">{formatDate((selectedEvent as HolidayEvent).date)}</p>
+              <p className="text-sm text-muted-foreground">{(selectedEvent as HolidayEvent).description}</p>
+              <p className="text-xs text-muted-foreground mt-1">{formatDate((selectedEvent as HolidayEvent).date)}</p>
             </>
           ) : (
             <>
@@ -744,7 +744,7 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
                       {EVENT_TYPE_LABELS[ev.event_type] ?? ev.event_type}
                     </Badge>
 
-                    <div className="space-y-1 text-xs text-gray-600">
+                    <div className="space-y-1 text-xs text-muted-foreground">
                       <p>
                         <span className="font-medium">Date: </span>
                         {formatDate(ev.start_time.split('T')[0])}
@@ -766,7 +766,7 @@ export default function CalendarApp({ currentUserId, userRole }: CalendarAppProp
                         <p><span className="font-medium">Server: </span>{ev.course_server.name}</p>
                       )}
                       {ev.description && (
-                        <p className="mt-1 text-gray-700">{ev.description}</p>
+                        <p className="mt-1 text-foreground">{ev.description}</p>
                       )}
                     </div>
                   </>

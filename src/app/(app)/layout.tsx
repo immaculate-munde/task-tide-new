@@ -14,14 +14,16 @@ import { AppLogoSidebar } from "@/components/AppLogo";
 import { MainNav } from "@/components/MainNav";
 import { UserNav } from "@/components/UserNav";
 import { Button } from "@/components/ui/button";
-import { Bell, LogOut } from "lucide-react";
+import { Bell, Sun, Moon } from "lucide-react";
 import Link from 'next/link';
 import { useAppContext } from '@/hooks/useAppContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentUser, isAuthenticated, isLoading } = useAppContext();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -65,6 +67,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Optional: Breadcrumbs or page title can go here */}
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} title="Toggle theme">
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              <span className="sr-only">Toggle theme</span>
+            </Button>
             <Button variant="ghost" size="icon" asChild>
               <Link href="/notifications">
                 <Bell className="h-5 w-5" />

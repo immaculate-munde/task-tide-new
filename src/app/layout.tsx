@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppProvider } from '@/contexts/AppContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import SplashScreen from '@/components/SplashScreen';
 
 export default function RootLayout({
@@ -49,10 +50,12 @@ export default function RootLayout({
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <AppProvider>
-                {children}
-                <Toaster />
-              </AppProvider>
+              <ThemeProvider>
+                <AppProvider>
+                  {children}
+                  <Toaster />
+                </AppProvider>
+              </ThemeProvider>
             </motion.div>
           )}
         </AnimatePresence>

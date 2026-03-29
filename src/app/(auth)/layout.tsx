@@ -1,16 +1,30 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { BookMarked } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BookMarked, Sun, Moon } from "lucide-react";
 import Link from "next/link";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary flex items-center justify-center p-6 relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        className="absolute top-4 right-4"
+        title="Toggle theme"
+      >
+        {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        <span className="sr-only">Toggle theme</span>
+      </Button>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold text-primary">
