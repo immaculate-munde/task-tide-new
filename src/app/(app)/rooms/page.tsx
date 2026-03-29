@@ -152,15 +152,6 @@ export default function AllUnitsPage() {
 
   return (
     <div className="container mx-auto py-6">
-      {/* Temporary debug — remove after confirming */}
-      <div className="mb-4 p-3 rounded bg-muted text-xs text-muted-foreground font-mono break-all">
-        <p><strong>your id:</strong> {String(currentUser?.id)}</p>
-        <p><strong>your role:</strong> {currentUser?.role}</p>
-        {servers.map(s => (
-          <p key={s.id}><strong>server &quot;{s.name}&quot;:</strong> class_rep_id={String((s as any).class_rep_id)} | match={String(String((s as any).class_rep_id) === String(currentUser?.id))}</p>
-        ))}
-      </div>
-
       {/* Header */}
       <header className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
