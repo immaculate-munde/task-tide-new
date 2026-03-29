@@ -6,7 +6,7 @@ import { requireClassRep } from '../middleware/requireRole';
 const router = Router();
 
 // GET /api/units  — all units across enrolled servers
-router.get('/', authenticate, async (req, res) => {
+router.get('/units', authenticate, async (req, res) => {
     const userId = req.user!.id;
 
     const { data: memberships } = await supabase
@@ -52,7 +52,7 @@ router.post('/course-servers/:serverId/units', authenticate, requireClassRep, as
 });
 
 // GET /api/units/:id
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/units/:id', authenticate, async (req, res) => {
     const { data, error } = await supabase
         .from('units')
         .select('*, course_server:course_servers(*)')
@@ -64,7 +64,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // PUT /api/units/:id  — class_rep only
-router.put('/:id', authenticate, requireClassRep, async (req, res) => {
+router.put('/units/:id', authenticate, requireClassRep, async (req, res) => {
     const { name, unit_code, description, credits } = req.body;
 
     const { data, error } = await supabase
@@ -79,7 +79,7 @@ router.put('/:id', authenticate, requireClassRep, async (req, res) => {
 });
 
 // DELETE /api/units/:id  — class_rep only
-router.delete('/:id', authenticate, requireClassRep, async (req, res) => {
+router.delete('/units/:id', authenticate, requireClassRep, async (req, res) => {
     const { error } = await supabase.from('units').delete().eq('id', req.params.id);
     if (error) { res.status(500).json({ message: error.message }); return; }
     res.json({ message: 'Unit deleted.' });
