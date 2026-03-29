@@ -141,6 +141,7 @@ export default function AllUnitsPage() {
   const unitsByServer = servers.map((server) => ({
     server,
     units: allUnits.filter((u) => u.course_server_id === server.id),
+    isAdmin: String(server.class_rep_id) === String(currentUser?.id),
   }));
 
   return (
@@ -189,8 +190,7 @@ export default function AllUnitsPage() {
         </Card>
       ) : (
         <div className="space-y-10">
-          {unitsByServer.map(({ server, units }) => {
-            const isServerAdmin = server.class_rep_id === currentUser?.id;
+          {unitsByServer.map(({ server, units, isAdmin: isServerAdmin }) => {
             const isAddingHere = addingForServer === server.id;
 
             return (

@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAppContext } from "@/hooks/useAppContext";
 import { Server, Plus } from "lucide-react";
 
 interface Props {
@@ -28,6 +29,7 @@ export default function CreateServerDialog({ open, onOpenChange, onCreated }: Pr
     const [description, setDescription] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
+    const { refreshUser } = useAppContext();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,6 +45,7 @@ export default function CreateServerDialog({ open, onOpenChange, onCreated }: Pr
                 title: "Server created! 🎉",
                 description: `"${course_server.name}" is ready. Share the code: ${course_server.code}`,
             });
+            await refreshUser(); // backend may have promoted role to class_rep
             onCreated(course_server);
             setName("");
             setDescription("");
