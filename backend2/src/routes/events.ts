@@ -47,7 +47,7 @@ router.get('/events', authenticate, async (req, res) => {
 
 // GET /api/course-servers/:serverId/events
 router.get('/course-servers/:serverId/events', authenticate, async (req, res) => {
-  const serverId = parseInt(req.params.serverId);
+  const serverId = parseInt(req.params.serverId as string);
   const userId = req.user!.id;
 
   // Check membership
@@ -85,7 +85,7 @@ router.get('/course-servers/:serverId/events', authenticate, async (req, res) =>
 
 // POST /api/course-servers/:serverId/events — class_rep only
 router.post('/course-servers/:serverId/events', authenticate, async (req, res) => {
-  const serverId = parseInt(req.params.serverId);
+  const serverId = parseInt(req.params.serverId as string);
   const userId = req.user!.id;
 
   const { data: server, error: serverError } = await supabase
@@ -144,7 +144,7 @@ router.post('/course-servers/:serverId/events', authenticate, async (req, res) =
 
 // PUT /api/events/:id — class_rep only
 router.put('/events/:id', authenticate, async (req, res) => {
-  const eventId = parseInt(req.params.id);
+  const eventId = parseInt(req.params.id as string);
   const userId = req.user!.id;
 
   const { data: existing } = await supabase
@@ -192,7 +192,7 @@ router.put('/events/:id', authenticate, async (req, res) => {
 
 // DELETE /api/events/:id — class_rep only
 router.delete('/events/:id', authenticate, async (req, res) => {
-  const eventId = parseInt(req.params.id);
+  const eventId = parseInt(req.params.id as string);
   const userId = req.user!.id;
 
   const { data: existing } = await supabase
