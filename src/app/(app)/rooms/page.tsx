@@ -6,12 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookCopy, Server, Plus, Hash, Crown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { BookCopy, Server, Plus, Hash, Crown, Loader2, Trash2, X } from "lucide-react";
 import { useAppContext } from "@/hooks/useAppContext";
+import { useToast } from "@/hooks/use-toast";
 import CreateServerDialog from "@/components/CreateServerDialog";
 import JoinServerDialog from "@/components/JoinServerDialog";
 
-// Helper to get a consistent color from a predefined list based on string hash
 const colorClasses = [
   "bg-red-500", "bg-pink-500", "bg-purple-500", "bg-indigo-500",
   "bg-blue-500", "bg-cyan-500", "bg-teal-500", "bg-green-500",
@@ -34,15 +36,28 @@ function getColorClass(name: string): string {
   return colorClasses[Math.abs(hashCode(name)) % colorClasses.length];
 }
 
+interface AddUnitFormState {
+  name: string;
+  unit_code: string;
+  description: string;
+  credits: string;
+}
+
 export default function AllUnitsPage() {
   const { currentUser } = useAppContext();
-  const isClassRep = currentUser?.role === 'class_rep';
+  const { toast } = useToast();
 
   const [servers, setServers] = useState<ApiCourseServer[]>([]);
   const [allUnits, setAllUnits] = useState<ApiUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
+
+  // Per-server add-unit form state
+  const [addingForServer, setAddingForServer] = useState<number | null>(null);
+  const [form, setForm] = useState<AddUnitFormState>({ name: '', unit_code: '', description: '', credits: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingUnitId, setDeletingUnitId] = useState<number | null>(null);
 
   const loadData = useCallback(() => {
     if (!currentUser) return;
@@ -69,6 +84,50 @@ export default function AllUnitsPage() {
     });
   };
 
+  const openAddUnit = (serverId: number) => {
+    setAddingForServer(serverId);
+    setForm({ name: '', unit_code: '', description: '', credits: '' });
+  };
+
+  const closeAddUnit = () => {
+    setAddingForServer(null);
+    setForm({ name: '', unit_code: '', description: '', credits: '' });
+  };
+
+  const handleAddUnit = async (e: React.FormEvent, serverId: number) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.unit_code.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const { unit } = await unitsApi.create(serverId, {
+        name: form.name.trim(),
+        unit_code: form.unit_code.trim(),
+        description: form.description.trim() || undefined,
+        credits: form.credits ? Number(form.credits) : undefined,
+      });
+      setAllUnits(prev => [...prev, unit]);
+      closeAddUnit();
+      toast({ title: "Unit added", description: `${unit.unit_code} — ${unit.name}` });
+    } catch (err: any) {
+      toast({ title: "Failed to add unit", description: err.message, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteUnit = async (unitId: number) => {
+    setDeletingUnitId(unitId);
+    try {
+      await unitsApi.delete(unitId);
+      setAllUnits(prev => prev.filter(u => u.id !== unitId));
+      toast({ title: "Unit deleted" });
+    } catch (err: any) {
+      toast({ title: "Failed to delete unit", description: err.message, variant: "destructive" });
+    } finally {
+      setDeletingUnitId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-6">
@@ -79,7 +138,6 @@ export default function AllUnitsPage() {
     );
   }
 
-  // Group units by their course server
   const unitsByServer = servers.map((server) => ({
     server,
     units: allUnits.filter((u) => u.course_server_id === server.id),
@@ -98,12 +156,10 @@ export default function AllUnitsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {isClassRep && (
-            <Button onClick={() => setShowCreate(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              <span>Create Server</span>
-            </Button>
-          )}
+          <Button onClick={() => setShowCreate(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            <span>Create Server</span>
+          </Button>
           <Button variant="outline" onClick={() => setShowJoin(true)} className="gap-2">
             <Hash className="h-4 w-4" />
             <span>Join Server</span>
@@ -133,49 +189,151 @@ export default function AllUnitsPage() {
         </Card>
       ) : (
         <div className="space-y-10">
-          {unitsByServer.map(({ server, units }) => (
-            <section key={server.id}>
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <Server className="h-5 w-5 text-primary flex-shrink-0" />
-                <h2 className="text-xl font-semibold font-headline">{server.name}</h2>
-                <Badge variant="secondary" className="font-mono text-xs">{server.code}</Badge>
-                {server.class_rep_id === currentUser?.id && (
-                  <Badge className="gap-1 text-xs">
-                    <Crown className="h-3 w-3" /> Admin
-                  </Badge>
-                )}
-              </div>
+          {unitsByServer.map(({ server, units }) => {
+            const isServerAdmin = server.class_rep_id === currentUser?.id;
+            const isAddingHere = addingForServer === server.id;
 
-              {units.length === 0 ? (
-                <p className="text-sm text-muted-foreground ml-8">No units in this server yet.</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 ml-0 sm:ml-8">
-                  {units.map((unit) => (
-                    <Link
-                      href={`/rooms/${server.id}/${unit.id}`}
-                      key={unit.id}
-                      className="block group"
+            return (
+              <section key={server.id}>
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <Server className="h-5 w-5 text-primary flex-shrink-0" />
+                  <h2 className="text-xl font-semibold font-headline">{server.name}</h2>
+                  <Badge variant="secondary" className="font-mono text-xs">{server.code}</Badge>
+                  {isServerAdmin && (
+                    <Badge className="gap-1 text-xs">
+                      <Crown className="h-3 w-3" /> Admin
+                    </Badge>
+                  )}
+                  {isServerAdmin && (
+                    <Button
+                      size="sm"
+                      variant={isAddingHere ? "outline" : "secondary"}
+                      className="ml-auto gap-1.5 h-7 text-xs"
+                      onClick={() => isAddingHere ? closeAddUnit() : openAddUnit(server.id)}
                     >
-                      <Card
-                        className={`h-36 ${getColorClass(unit.name)} text-white rounded-lg overflow-hidden relative transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl`}
-                      >
-                        <CardHeader className="p-3 relative z-10">
-                          <CardTitle className="text-sm font-semibold leading-tight" title={unit.name}>
-                            {unit.name}
-                          </CardTitle>
-                          {unit.unit_code && (
-                            <CardDescription className="text-xs text-white/80">
-                              {unit.unit_code}
-                            </CardDescription>
-                          )}
-                        </CardHeader>
-                      </Card>
-                    </Link>
-                  ))}
+                      {isAddingHere ? (
+                        <><X className="h-3 w-3" /> Cancel</>
+                      ) : (
+                        <><Plus className="h-3 w-3" /> Add Unit</>
+                      )}
+                    </Button>
+                  )}
                 </div>
-              )}
-            </section>
-          ))}
+
+                {/* Add unit form */}
+                {isServerAdmin && isAddingHere && (
+                  <div className="mb-4 ml-0 sm:ml-8">
+                    <Card className="border-primary/30">
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <CardTitle className="text-sm">New Unit</CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4">
+                        <form onSubmit={(e) => handleAddUnit(e, server.id)} className="space-y-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label htmlFor={`name-${server.id}`} className="text-xs">Unit Name *</Label>
+                              <Input
+                                id={`name-${server.id}`}
+                                value={form.name}
+                                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                placeholder="e.g. Introduction to Programming"
+                                className="h-8 text-sm"
+                                required
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor={`code-${server.id}`} className="text-xs">Unit Code *</Label>
+                              <Input
+                                id={`code-${server.id}`}
+                                value={form.unit_code}
+                                onChange={e => setForm(f => ({ ...f, unit_code: e.target.value }))}
+                                placeholder="e.g. CS101"
+                                className="h-8 text-sm"
+                                required
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor={`desc-${server.id}`} className="text-xs">Description</Label>
+                              <Input
+                                id={`desc-${server.id}`}
+                                value={form.description}
+                                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                                placeholder="Optional"
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor={`credits-${server.id}`} className="text-xs">Credits</Label>
+                              <Input
+                                id={`credits-${server.id}`}
+                                type="number"
+                                min="1"
+                                max="30"
+                                value={form.credits}
+                                onChange={e => setForm(f => ({ ...f, credits: e.target.value }))}
+                                placeholder="Optional"
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end">
+                            <Button type="submit" size="sm" disabled={isSubmitting}>
+                              {isSubmitting ? (
+                                <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Adding...</>
+                              ) : "Add Unit"}
+                            </Button>
+                          </div>
+                        </form>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {units.length === 0 ? (
+                  <p className="text-sm text-muted-foreground ml-8">
+                    {isServerAdmin ? 'No units yet. Click "Add Unit" to create one.' : 'No units in this server yet.'}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 ml-0 sm:ml-8">
+                    {units.map((unit) => (
+                      <div key={unit.id} className="relative group">
+                        <Link href={`/rooms/${server.id}/${unit.id}`} className="block">
+                          <Card
+                            className={`h-36 ${getColorClass(unit.name)} text-white rounded-lg overflow-hidden relative transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl`}
+                          >
+                            <CardHeader className="p-3 relative z-10">
+                              <CardTitle className="text-sm font-semibold leading-tight" title={unit.name}>
+                                {unit.name}
+                              </CardTitle>
+                              {unit.unit_code && (
+                                <CardDescription className="text-xs text-white/80">
+                                  {unit.unit_code}
+                                </CardDescription>
+                              )}
+                            </CardHeader>
+                          </Card>
+                        </Link>
+                        {isServerAdmin && (
+                          <button
+                            onClick={() => handleDeleteUnit(unit.id)}
+                            disabled={deletingUnitId === unit.id}
+                            className="absolute top-2 right-2 z-20 bg-black/40 hover:bg-red-600 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete unit"
+                          >
+                            {deletingUnitId === unit.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
       )}
 
