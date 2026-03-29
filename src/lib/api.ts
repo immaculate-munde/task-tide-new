@@ -243,6 +243,10 @@ export const courseServers = {
   leave(id: number): Promise<{ message: string }> {
     return request(`/course-servers/${id}/leave`, { method: 'DELETE' });
   },
+
+  delete(id: number): Promise<{ message: string }> {
+    return request(`/course-servers/${id}`, { method: 'DELETE' });
+  },
 };
 
 // ---------------------------------------------------------------------------

@@ -137,6 +137,28 @@ router.post('/join', authenticate, async (req, res) => {
     res.json({ course_server: server });
 });
 
+// DELETE /api/course-servers/:id  — class_rep owner only
+router.delete('/:id', authenticate, requireClassRep, async (req, res) => {
+    const { data: server } = await supabase
+        .from('course_servers')
+        .select('class_rep_id')
+        .eq('id', req.params.id)
+        .single();
+
+    if (!server || server.class_rep_id !== req.user!.id) {
+        res.status(403).json({ message: 'Only the class rep can delete this server.' });
+        return;
+    }
+
+    const { error } = await supabase
+        .from('course_servers')
+        .delete()
+        .eq('id', req.params.id);
+
+    if (error) { res.status(500).json({ message: error.message }); return; }
+    res.json({ message: 'Server deleted.' });
+});
+
 // DELETE /api/course-servers/:id/leave
 router.delete('/:id/leave', authenticate, async (req, res) => {
     await supabase

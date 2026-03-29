@@ -8,6 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { BookCopy, Server, Plus, Hash, Crown, Loader2, Trash2, X } from "lucide-react";
 import { useAppContext } from "@/hooks/useAppContext";
 import { useToast } from "@/hooks/use-toast";
@@ -53,11 +63,18 @@ export default function AllUnitsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
 
-  // Per-server add-unit form state
+  // Add unit form
   const [addingForServer, setAddingForServer] = useState<number | null>(null);
   const [form, setForm] = useState<AddUnitFormState>({ name: '', unit_code: '', description: '', credits: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deletingUnitId, setDeletingUnitId] = useState<number | null>(null);
+
+  // Confirmation dialog state
+  const [confirm, setConfirm] = useState<{
+    type: 'delete-server' | 'delete-unit';
+    id: number;
+    label: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!currentUser) return;
@@ -121,16 +138,25 @@ export default function AllUnitsPage() {
     }
   };
 
-  const handleDeleteUnit = async (unitId: number) => {
-    setDeletingUnitId(unitId);
+  const handleConfirmDelete = async () => {
+    if (!confirm) return;
+    setIsDeleting(true);
     try {
-      await unitsApi.delete(unitId);
-      setAllUnits(prev => prev.filter(u => u.id !== unitId));
-      toast({ title: "Unit deleted" });
+      if (confirm.type === 'delete-server') {
+        await courseServersApi.delete(confirm.id);
+        setServers(prev => prev.filter(s => s.id !== confirm.id));
+        setAllUnits(prev => prev.filter(u => u.course_server_id !== confirm.id));
+        toast({ title: "Server deleted", description: `"${confirm.label}" has been deleted.` });
+      } else {
+        await unitsApi.delete(confirm.id);
+        setAllUnits(prev => prev.filter(u => u.id !== confirm.id));
+        toast({ title: "Unit deleted", description: `"${confirm.label}" has been deleted.` });
+      }
     } catch (err: any) {
-      toast({ title: "Failed to delete unit", description: err.message, variant: "destructive" });
+      toast({ title: "Failed to delete", description: err.message, variant: "destructive" });
     } finally {
-      setDeletingUnitId(null);
+      setIsDeleting(false);
+      setConfirm(null);
     }
   };
 
@@ -184,12 +210,10 @@ export default function AllUnitsPage() {
             </p>
             <div className="flex justify-center gap-3">
               <Button onClick={() => setShowCreate(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create Server
+                <Plus className="h-4 w-4" /> Create Server
               </Button>
               <Button onClick={() => setShowJoin(true)} variant="outline" className="gap-2">
-                <Hash className="h-4 w-4" />
-                Join with Code
+                <Hash className="h-4 w-4" /> Join with Code
               </Button>
             </div>
           </CardContent>
@@ -211,18 +235,28 @@ export default function AllUnitsPage() {
                     </Badge>
                   )}
                   {isServerAdmin && (
-                    <Button
-                      size="sm"
-                      variant={isAddingHere ? "outline" : "secondary"}
-                      className="ml-auto gap-1.5 h-7 text-xs"
-                      onClick={() => isAddingHere ? closeAddUnit() : openAddUnit(server.id)}
-                    >
-                      {isAddingHere ? (
-                        <><X className="h-3 w-3" /> Cancel</>
-                      ) : (
-                        <><Plus className="h-3 w-3" /> Add Unit</>
-                      )}
-                    </Button>
+                    <div className="ml-auto flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant={isAddingHere ? "outline" : "secondary"}
+                        className="gap-1.5 h-7 text-xs"
+                        onClick={() => isAddingHere ? closeAddUnit() : openAddUnit(server.id)}
+                      >
+                        {isAddingHere ? (
+                          <><X className="h-3 w-3" /> Cancel</>
+                        ) : (
+                          <><Plus className="h-3 w-3" /> Add Unit</>
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="gap-1.5 h-7 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => setConfirm({ type: 'delete-server', id: server.id, label: server.name })}
+                      >
+                        <Trash2 className="h-3 w-3" /> Delete Server
+                      </Button>
+                    </div>
                   )}
                 </div>
 
@@ -321,16 +355,11 @@ export default function AllUnitsPage() {
                         </Link>
                         {isServerAdmin && (
                           <button
-                            onClick={() => handleDeleteUnit(unit.id)}
-                            disabled={deletingUnitId === unit.id}
+                            onClick={() => setConfirm({ type: 'delete-unit', id: unit.id, label: unit.name })}
                             className="absolute top-2 right-2 z-20 bg-black/40 hover:bg-red-600 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Delete unit"
                           >
-                            {deletingUnitId === unit.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-3.5 w-3.5" />
-                            )}
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         )}
                       </div>
@@ -353,6 +382,32 @@ export default function AllUnitsPage() {
         onOpenChange={setShowJoin}
         onJoined={handleJoined}
       />
+
+      {/* Confirmation dialog */}
+      <AlertDialog open={!!confirm} onOpenChange={(open) => { if (!open && !isDeleting) setConfirm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirm?.type === 'delete-server' ? 'Delete course server?' : 'Delete unit?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirm?.type === 'delete-server'
+                ? `Are you sure you want to delete "${confirm?.label}"? This will permanently remove the server and all its units, messages, and documents. This cannot be undone.`
+                : `Are you sure you want to delete "${confirm?.label}"? All messages, documents, and groups in this unit will be permanently removed.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Deleting...</> : 'Yes, delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
