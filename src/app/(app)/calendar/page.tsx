@@ -1,9 +1,17 @@
-import CalendarApp from "../../../components/CalendarApp";
+"use client";
 
-export default function Home() {
+import CalendarApp from "../../../components/CalendarApp";
+import { useAppContext } from "@/hooks/useAppContext";
+
+export default function CalendarPage() {
+  const { currentUser } = useAppContext();
+
   return (
     <main>
-      <CalendarApp />
+      <CalendarApp
+        currentUserId={currentUser ? String(currentUser.id) : undefined}
+        userRole={currentUser?.role}
+      />
     </main>
   );
 }

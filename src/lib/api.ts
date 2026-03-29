@@ -401,3 +401,71 @@ export const groups = {
     return request(`/units/${unitId}/groups`, { method: 'DELETE' });
   },
 };
+
+// ---------------------------------------------------------------------------
+// Events
+// ---------------------------------------------------------------------------
+
+export interface ApiEvent {
+  id: number;
+  course_server_id: number;
+  unit_id: number | null;
+  created_by: string;
+  title: string;
+  description: string | null;
+  event_type: 'lecture' | 'cat' | 'exam' | 'assignment_due' | 'other';
+  venue: string | null;
+  start_time: string;
+  end_time: string | null;
+  all_day: boolean;
+  created_at: string;
+  course_server?: ApiCourseServer;
+  unit?: ApiUnit | null;
+  creator?: ApiUser;
+}
+
+export const events = {
+  listAll(): Promise<{ events: ApiEvent[] }> {
+    return request('/events');
+  },
+
+  listForServer(serverId: number): Promise<{ events: ApiEvent[] }> {
+    return request(`/course-servers/${serverId}/events`);
+  },
+
+  create(serverId: number, payload: {
+    title: string;
+    event_type: string;
+    start_time: string;
+    end_time?: string;
+    all_day?: boolean;
+    venue?: string;
+    description?: string;
+    unit_id?: number;
+  }): Promise<{ event: ApiEvent }> {
+    return request(`/course-servers/${serverId}/events`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  update(eventId: number, payload: Partial<{
+    title: string;
+    event_type: string;
+    start_time: string;
+    end_time: string;
+    all_day: boolean;
+    venue: string;
+    description: string;
+    unit_id: number;
+  }>): Promise<{ event: ApiEvent }> {
+    return request(`/events/${eventId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  delete(eventId: number): Promise<{ message: string }> {
+    return request(`/events/${eventId}`, { method: 'DELETE' });
+  },
+};

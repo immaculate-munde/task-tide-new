@@ -9,6 +9,7 @@ import documentRoutes from './routes/documents';
 import messageRoutes from './routes/messages';
 import groupRoutes from './routes/groups';
 import invitationRoutes from './routes/invitations';
+import eventRoutes from './routes/events';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -46,6 +47,9 @@ app.use('/api', groupRoutes);
 // Invitations
 app.use('/api/invitations', invitationRoutes);
 app.use('/api', invitationRoutes); // Handles /api/units/:unitId/invitations
+
+// Events
+app.use('/api', eventRoutes);
 
 // ─── 404 handler ──────────────────────────────────────────
 app.use((_req, res) => {
